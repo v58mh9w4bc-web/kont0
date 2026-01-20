@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Континент — Премиум Салон Красоты</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Montserrat', sans-serif; }
+        .logo-font { font-family: 'Cormorant Garamond', serif; letter-spacing: 0.15em; font-weight: 300; }
+        .hero-gradient { background: linear-gradient(135deg, #d4c5b9 0%, #b8a99a 100%); }
+        .accent-color { color: #9b8579; }
+        .accent-bg { background-color: #c9b8a8; }
+        .hover-accent:hover { background-color: #b8a99a; }
+        .pastel-bg { background-color: #f5f1ed; }
+        .service-card { transition: all 0.3s ease; background: linear-gradient(135deg, #faf8f5 0%, #f0ebe5 100%); }
+        .service-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(155,133,121,0.15); }
+        .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(155,133,121,0.5); backdrop-filter: blur(8px); }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .time-slot { transition: all 0.2s; }
+        .time-slot:hover:not(.disabled) { transform: scale(1.05); }
+        .time-slot.disabled { opacity: 0.4; cursor: not-allowed; }
+        .service-item { cursor: pointer; transition: all 0.3s ease; }
+        .service-item:hover { background-color: #f0ebe5; }
+        .service-item.selected { background-color: #e8dfd6; border-left: 4px solid #9b8579; }
+        .subservice-container { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .subservice-container.expanded { max-height: 500px; }
+        .info-card { background: linear-gradient(135deg, #faf8f5 0%, #f5f1ed 100%); border-left: 3px solid #c9b8a8; }
+        .price-badge { background-color: #e8dfd6; color: #6b5d52; }
+    </style>
+</head>
+<body class="pastel-bg">
+    <!-- Header -->
+    <header class="bg-white shadow-sm py-5 fixed w-full z-40">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <h1 class="text-3xl logo-font accent-color">КОНТИНЕНТ</h1>
+            <nav class="hidden md:flex space-x-8">
+                <a href="#services" class="text-gray-700 hover:text-gray-900 transition">Услуги</a>
+                <a href="#advantages" class="text-gray-700 hover:text-gray-900 transition">Преимущества</a>
+                <a href="#prices" class="text-gray-700 hover:text-gray-900 transition">Цены</a>
+                <a href="#about" class="text-gray-700 hover:text-gray-900 transition">О нас</a>
+                <a href="#contact" class="text-gray-700 hover:text-gray-900 transition">Контакты</a>
+            </nav>
+            <button onclick="openBookingModal()" class="accent-bg hover-accent text-white px-8 py-3 rounded-full font-medium transition shadow-md">
+                Записаться
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient pt-32 pb-20 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20">
+            <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=\'80\' height=\'80\' viewBox=\'0 0 80 80\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10S0 25.523 0 20s4.477-10 10-10zm10 8c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm40 40c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z\' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+        </div>
+        <div class="container mx-auto px-6 text-center relative z-10">
+            <h2 class="text-5xl md:text-7xl logo-font text-white mb-6 font-light">Искусство красоты</h2>
+            <p class="text-xl md:text-2xl mb-10 text-white opacity-90">Премиум-услуги для тех, кто ценит качество и индивидуальный подход</p>
+            <button onclick="openBookingModal()" class="bg-white text-gray-800 px-12 py-4 rounded-full text-lg font-medium transition transform hover:scale-105 shadow-xl">
+                Записаться онлайн
+            </button>
+            <div class="mt-12 grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div class="text-white">
+                    <div class="text-4xl font-bold mb-2">10+</div>
+                    <div class="opacity-90">лет опыта</div>
+                </div>
+                <div class="text-white">
+                    <div class="text-4xl font-bold mb-2">15+</div>
+                    <div class="opacity-90">мастеров</div>
+                </div>
+                <div class="text-white">
+                    <div class="text-4xl font-bold mb-2">5000+</div>
+                    <div class="opacity-90">довольных клиентов</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Advantages Section -->
+    <section id="advantages" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl logo-font text-center mb-4 text-gray-800">Почему выбирают нас</h2>
+            <p class="text-center text-gray-600 mb-16 text-lg">Мы создаем не просто образы, мы дарим уверенность</p>
+            
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="info-card p-6 rounded-xl">
+                    <div class="text-4xl mb-4">🏆</div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Профессионализм</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Все мастера имеют международные сертификаты и регулярно повышают квалификацию</p>
+                </div>
+                <div class="info-card p-6 rounded-xl">
+                    <div class="text-4xl mb-4">✨</div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Премиум косметика</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Используем только профессиональные бренды: Kerastase, Olaplex, OPI, Dermalogica</p>
+                </div>
+                <div class="info-card p-6 rounded-xl">
+                    <div class="text-4xl mb-4">🎯</div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Индивидуальный подход</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Консультация перед каждой процедурой, учитываем все ваши пожелания</p>
+                </div>
+                <div class="info-card p-6 rounded-xl">
+                    <div class="text-4xl mb-4">🌿</div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Комфорт и атмосфера</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Уютные VIP-зоны, кофе-бар, Wi-Fi, парковка для клиентов</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-20 pastel-bg">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl logo-font text-center mb-4 text-gray-800">Наши услуги</h2>
+            <p class="text-center text-gray-600 mb-16 text-lg">Полный спектр премиум-услуг для вашей красоты</p>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Мужской зал -->
+                <div class="service-card rounded-2xl p-8 shadow-lg border border-gray-200">
+                    <div class="text-4xl mb-4">✂️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Мужской зал</h3>
+                    <ul class="space-y-2 text-gray-700 text-sm mb-4">
+                        <li class="flex justify-between"><span>• Мужская стрижка</span><span class="price-badge px-2 py-1 rounded text-xs">от 1500₽</span></li>
+                        <li class="flex justify-between"><span>• Стрижка бороды</span><span class="price-badge px-2 py-1 rounded text-xs">от 800₽</span></li>
+                        <li class="flex justify-between"><span>• Моделирование бороды</span><span class="price-badge px-2 py-1 rounded text-xs">от 1200₽</span></li>
+                        <li class="flex justify-between"><span>• Королевское бритье</span><span class="price-badge px-2 py-1 rounded text-xs">от 2000₽</span></li>
+                        <li class="flex justify-between"><span>• Камуфляж седины</span><span class="price-badge px-2 py-1 rounded text-xs">от 1500₽</span></li>
+                    </ul>
+                    <p class="text-xs text-gray-500 italic">Длительность: 30-60 мин</p>
+                </div>
+
+                <!-- Женский зал -->
+                <div class="service-card rounded-2xl p-8 shadow-lg border border-gray-200">
+                    <div class="text-4xl mb-4">💇‍♀️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Женский зал</h3>
+                    <ul class="space-y-2 text-gray-700 text-sm mb-4">
+                        <li class="flex justify-between"><span>• Женская стрижка</span><span class="price-badge px-2 py-1 rounded text-xs">от 2500₽</span></li>
+                        <li class="flex justify-between"><span>• Сложное окрашивание</span><span class="price-badge px-2 py-1 rounded text-xs">от 8000₽</span></li>
+                        <li class="flex justify-between"><span>• Балаяж / Шатуш</span><span class="price-badge px-2 py-1 rounded text-xs">от 9000₽</span></li>
+                        <li class="flex justify-between"><span>• Укладка</span><span class="price-badge px-2 py-1 rounded text-xs">от 1800₽</span></li>
+                        <li class="flex justify-between"><span>• Ламинирование волос</span><span class="price-badge px-2 py-1 rounded text-xs">от 3500₽</span></li>
+                    </ul>
+                    <p class="text-xs text-gray-500 italic">Длительность: 60-180 мин</p>
+                </div>
+
+                <!-- Ногтевой сервис -->
+                <div class="service-card rounded-2xl p-8 shadow-lg border border-gray-200">
+                    <div class="text-4xl mb-4">💅</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Ногтевой сервис</h3>
+                    <ul class="space-y-2 text-gray-700 text-sm mb-4">
+                        <li class="flex justify-between"><span>• Маникюр</span><span class="price-badge px-2 py-1 rounded text-xs">от 1500₽</span></li>
+                        <li class="flex justify-between"><span>• Педикюр</span><span class="price-badge px-2 py-1 rounded text-xs">от 2000₽</span></li>
+                        <li class="flex justify-between"><span>• Наращивание ногтей</span><span class="price-badge px-2 py-1 rounded text-xs">от 3000₽</span></li>
+                        <li class="flex justify-between"><span>• Дизайн ногтей</span><span class="price-badge px-2 py-1 rounded text-xs">от 500₽</span></li>
+                        <li class="flex justify-between"><span>• Укрепление ногтей</span><span class="price-badge px-2 py-1 rounded text-xs">от 800₽</span></li>
+                    </ul>
+                    <p class="text-xs text-gray-500 italic">Длительность: 60-120 мин</p>
+                </div>
+
+                <!-- Косметология -->
+                <div class="service-card rounded-2xl p-8 shadow-lg border border-gray-200">
+                    <div class="text-4xl mb-4">✨</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Косметология</h3>
+                    <ul class="space-y-2 text-gray-700 text-sm mb-4">
+                        <li class="flex justify-between"><span>• Чистка лица</span><span class="price-badge px-2 py-1 rounded text-xs">от 3500₽</span></li>
+                        <li class="flex justify-between"><span>• Пилинги</span><span class="price-badge px-2 py-1 rounded text-xs">от 2500₽</span></li>
+                        <li class="flex justify-between"><span>• Массаж лица</span><span class="price-badge px-2 py-1 rounded text-xs">от 2000₽</span></li>
+                        <li class="flex justify-between"><span>• Уходовые процедуры</span><span class="price-badge px-2 py-1 rounded text-xs">от 4000₽</span></li>
+                        <li class="flex justify-between"><span>• Мезотерапия</span><span class="price-badge px-2 py-1 rounded text-xs">от 5000₽</span></li>
+                    </ul>
+                    <p class="text-xs text-gray-500 italic">Длительность: 60-90 мин</p>
+                </div>
+
+                <!-- Брови и ресницы -->
+                <div class="service-card rounded-2xl p-8 shadow-lg border border-gray-200">
+                    <div class="text-4xl mb-4">👁️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Брови и ресницы</h3>
+                    <ul class="space-y-2 text-gray-700 text-sm mb-4">
+                        <li class="flex justify-between"><span>• Оформление бровей</span><span class="price-badge px-2 py-1 rounded text-xs">от 800₽</span></li>
+                        <li class="flex justify-between"><span>• Окрашивание бровей</span><span class="price-badge px-2 py-1 rounded text-xs">от 600₽</span></li>
+                        <li class="flex justify-between"><span>• Ламинирование бровей</span><span class="price-badge px-2 py-1 rounded text-xs">от 2000₽</span></li>
+                        <li class="flex justify-between"><span>• Наращивание ресниц</span><span class="price-badge px-2 py-1 rounded text-xs">от 2500₽</span></li>
+                        <li class="flex justify-between"><span>• Ламинирование ресниц</span><span class="price-badge px-2 py-1 rounded text-xs">от 1800₽</span></li>
+                    </ul>
+                    <p class="text-xs text-gray-500 italic">Длительность: 60-120 мин</p>
+                </div>
+
+                <!-- Дополнительные услуги -->
+                <div class="service-card rounded-2xl p-8 shadow-lg border border-gray-200">
+                    <div class="text-4xl mb-4">🌟</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Дополнительно</h3>
+                    <ul class="space-y-2 text-gray-700 text-sm mb-4">
+                        <li class="flex justify-between"><span>• Визаж</span><span class="price-badge px-2 py-1 rounded text-xs">от 2500₽</span></li>
+                        <li class="flex justify-between"><span>• Свадебный образ</span><span class="price-badge px-2 py-1 rounded text-xs">от 8000₽</span></li>
+                        <li class="flex justify-between"><span>• Вечерний макияж</span><span class="price-badge px-2 py-1 rounded text-xs">от 3500₽</span></li>
+                        <li class="flex justify-between"><span>• Консультация стилиста</span><span class="price-badge px-2 py-1 rounded text-xs">от 2000₽</span></li>
+                        <li class="flex justify-between"><span>• VIP-обслуживание</span><span class="price-badge px-2 py-1 rounded text-xs">от 5000₽</span></li>
+                    </ul>
+                    <p class="text-xs text-gray-500 italic">Длительность: 60-180 мин</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Prices Section -->
+    <section id="prices" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl logo-font text-center mb-4 text-gray-800">Специальные предложения</h2>
+            <p class="text-center text-gray-600 mb-16 text-lg">Выгодные пакеты услуг для наших клиентов</p>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="info-card p-8 rounded-2xl text-center">
+                    <h3 class="text-2xl font-bold mb-4 accent-color">Базовый уход</h3>
+                    <div class="text-4xl font-bold mb-4 text-gray-800">4500₽</div>
+                    <ul class="text-left space-y-3 text-gray-700 mb-6">
+                        <li>✓ Стрижка</li>
+                        <li>✓ Укладка</li>
+                        <li>✓ Маникюр</li>
+                    </ul>
+                    <p class="text-sm text-gray-500">Экономия 1000₽</p>
+                </div>
+                
+                <div class="info-card p-8 rounded-2xl text-center border-2 border-gray-400 relative">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-1 rounded-full text-sm">
+                        Популярный
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 accent-color">Полный образ</h3>
+                    <div class="text-4xl font-bold mb-4 text-gray-800">8500₽</div>
+                    <ul class="text-left space-y-3 text-gray-700 mb-6">
+                        <li>✓ Стрижка + окрашивание</li>
+                        <li>✓ Укладка</li>
+                        <li>✓ Маникюр + педикюр</li>
+                        <li>✓ Оформление бровей</li>
+                    </ul>
+                    <p class="text-sm text-gray-500">Экономия 2500₽</p>
+                </div>
+                
+                <div class="info-card p-8 rounded-2xl text-center">
+                    <h3 class="text-2xl font-bold mb-4 accent-color">VIP-день</h3>
+                    <div class="text-4xl font-bold mb-4 text-gray-800">15000₽</div>
+                    <ul class="text-left space-y-3 text-gray-700 mb-6">
+                        <li>✓ Все услуги "Полный образ"</li>
+                        <li>✓ Косметология лица</li>
+                        <li>✓ Массаж</li>
+                        <li>✓ Персональный стилист</li>
+                    </ul>
+                    <p class="text-sm text-gray-500">Экономия 5000₽</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 pastel-bg">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-4xl logo-font text-center mb-6 text-gray-800">О салоне</h2>
+                <p class="text-lg text-gray-700 leading-relaxed mb-8 text-center">
+                    Салон красоты «Континент» — это пространство, где профессионализм встречается с роскошью. 
+                    Мы создаем не просто образы, мы дарим уверенность и вдохновение.
+                </p>
+                
+                <div class="grid md:grid-cols-2 gap-8 mt-12">
+                    <div class="info-card p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold mb-3 accent-color">Наша миссия</h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            Помогать каждому клиенту раскрыть свою индивидуальность через профессиональный уход 
+                            и внимание к деталям. Мы верим, что красота начинается с заботы о себе.
+                        </p>
+                    </div>
+                    
+                    <div class="info-card p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold mb-3 accent-color">Наша команда</h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            15+ сертифицированных мастеров с опытом работы от 5 лет. Регулярное обучение 
+                            в ведущих академиях Европы и участие в международных конкурсах.
+                        </p>
+                    </div>
+                    
+                    <div class="info-card p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold mb-3 accent-color">Премиум косметика</h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            Работаем только с проверенными брендами: Kerastase, Olaplex, OPI, CND, Dermalogica, 
+                            SkinCeuticals. Все продукты сертифицированы и безопасны.
+                        </p>
+                    </div>
+                    
+                    <div class="info-card p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold mb-3 accent-color">Гарантия качества</h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            Если результат вас не устроил — мы бесплатно исправим в течение 3 дней. 
+                            Ваше удовлетворение — наш главный приоритет.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="text-4xl logo-font text-center mb-12 text-gray-800">Контакты</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="info-card p-8 rounded-xl text-center">
+                        <div class="text-4xl mb-4">📍</div>
+                        <h3 class="text-xl font-semibold mb-3 accent-color">Адрес</h3>
+                        <p class="text-gray-700">г. Москва<br>ул. Примерная, д. 123</p>
+                        <p class="text-sm text-gray-500 mt-2">5 минут от метро</p>
+                    </div>
+                    
+                    <div class="info-card p-8 rounded-xl text-center">
+                        <div class="text-4xl mb-4">📞</div>
+                        <h3 class="text-xl font-semibold mb-3 accent-color">Телефон</h3>
+                        <p class="text-gray-700 text-lg font-medium">+7 (495) 123-45-67</p>
+                        <p class="text-sm text-gray-500 mt-2">Ежедневно 9:00 — 21:00</p>
+                    </div>
+                    
+                    <div class="info-card p-8 rounded-xl text-center">
+                        <div class="text-4xl mb-4">⏰</div>
+                        <h3 class="text-xl font-semibold mb-3 accent-color">Режим работы</h3>
+                        <p class="text-gray-700">Пн-Вс: 9:00 — 21:00</p>
+                        <p class="text-sm text-gray-500 mt-2">Без выходных</p>
+                    </div>
+                </div>
+                
+                <div class="mt-12 text-center">
+                    <h3 class="text-xl font-semibold mb-4 accent-color">Мы в социальных сетях</h3>
+                    <div class="flex justify-center space-x-6">
+                        <a href="#" class="text-gray-600 hover:text-gray-800 transition text-lg">Instagram</a>
+                        <a href="#" class="text-gray-600 hover:text-gray-800 transition text-lg">VK</a>
+                        <a href="#" class="text-gray-600 hover:text-gray-800 transition text-lg">Telegram</a>
+                        <a href="#" class="text-gray-600 hover:text-gray-800 transition text-lg">WhatsApp</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 py-10">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h3 class="logo-font text-2xl mb-4 text-white">КОНТИНЕНТ</h3>
+                    <p class="text-sm leading-relaxed">Премиум салон красоты с индивидуальным подходом к каждому клиенту</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4 text-white">Полезная информация</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li>• Бесплатная парковка для клиентов</li>
+                        <li>• Wi-Fi и кофе-бар</li>
+                        <li>• Детская комната</li>
+                        <li>• Подарочные сертификаты</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4 text-white">Способы оплаты</h4>
+                    <p class="text-sm mb-2">Наличные, карты, переводы</p>
+                    <p class="text-sm">Принимаем подарочные сертификаты</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 pt-6 text-center text-sm">
+                <p>&copy; 2026 Салон красоты «Континент». Все права защищены.</p>
+                <div class="mt-4">
+                    <a href="admin.html" class="text-gray-500 hover:text-gray-300 text-xs">Админ-панель</a>
+                    <span class="mx-2">|</span>
+                    <a href="crm.html" class="text-gray-500 hover:text-gray-300 text-xs">CRM</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="bg-white rounded-2xl p-8 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl logo-font text-gray-800">Онлайн-запись</h3>
+                <button onclick="closeBookingModal()" class="text-gray-400 hover:text-gray-600 text-4xl leading-none">&times;</button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-8">
+                <div class="flex justify-between mb-2">
+                    <span class="text-xs text-gray-500">Шаг <span id="currentStep">1</span> из 4</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="progressBar" class="accent-bg h-2 rounded-full transition-all duration-300" style="width: 25%"></div>
+                </div>
+            </div>
+
+            <!-- Step 1: Service -->
+            <div id="step1" class="booking-step">
+                <h4 class="text-xl font-semibold mb-4 text-gray-800">Выберите категорию и услугу</h4>
+                <div id="servicesList" class="space-y-2"></div>
+            </div>
+
+            <!-- Step 2: Master -->
+            <div id="step2" class="booking-step hidden">
+                <button onclick="goToStep(1)" class="text-gray-600 hover:text-gray-800 mb-4 flex items-center">
+                    <span class="mr-2">←</span> Назад
+                </button>
+                <h4 class="text-xl font-semibold mb-4 text-gray-800">Выберите мастера</h4>
+                <p class="text-sm text-gray-500 mb-4">Показаны только мастера, специализирующиеся на выбранной услуге</p>
+                <div id="mastersList" class="space-y-3"></div>
+            </div>
+
+            <!-- Step 3: Date & Time -->
+            <div id="step3" class="booking-step hidden">
+                <button onclick="goToStep(2)" class="text-gray-600 hover:text-gray-800 mb-4 flex items-center">
+                    <span class="mr-2">←</span> Назад
+                </button>
+                <h4 class="text-xl font-semibold mb-4 text-gray-800">Выберите дату и время</h4>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Дата визита</label>
+                    <input type="date" id="bookingDate" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent" onchange="loadTimeSlots()">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Доступное время</label>
+                    <div id="timeSlotsList" class="grid grid-cols-4 gap-2"></div>
+                </div>
+                <div class="info-card p-4 rounded-lg mt-4">
+                    <p class="text-sm text-gray-600">
+                        <strong>Длительность:</strong> <span id="serviceDuration"></span> мин<br>
+                        <strong>Мастер:</strong> <span id="selectedMaster"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Step 4: Phone & Name -->
+            <div id="step4" class="booking-step hidden">
+                <button onclick="goToStep(3)" class="text-gray-600 hover:text-gray-800 mb-4 flex items-center">
+                    <span class="mr-2">←</span> Назад
+                </button>
+                <h4 class="text-xl font-semibold mb-4 text-gray-800">Контактные данные</h4>
+                
+                <div class="info-card p-6 rounded-xl mb-6">
+                    <h5 class="font-semibold mb-3 text-gray-800">Детали записи:</h5>
+                    <div class="space-y-2 text-sm text-gray-700">
+                        <p><strong>Услуга:</strong> <span id="summaryService"></span></p>
+                        <p><strong>Мастер:</strong> <span id="summaryMaster"></span></p>
+                        <p><strong>Дата:</strong> <span id="summaryDate"></span></p>
+                        <p><strong>Время:</strong> <span id="summaryTime"></span></p>
+                        <p><strong>Длительность:</strong> <span id="summaryDuration"></span> мин</p>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ваше имя *</label>
+                    <input type="text" id="clientName" placeholder="Например: Анна" 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Имя для записи в салоне</p>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ваш телефон *</label>
+                    <input type="tel" id="clientPhone" placeholder="+7 (___) ___-__-__" 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Мы свяжемся с вами для подтверждения записи</p>
+                </div>
+                
+                <button onclick="confirmBooking()" class="w-full accent-bg hover-accent text-white py-4 rounded-lg font-semibold transition shadow-md">
+                    Подтвердить запись
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="booking.js"></script>
+</body>
+</html>

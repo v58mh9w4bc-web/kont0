@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — Континент</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Montserrat', sans-serif; }
+        .logo-font { font-family: 'Cormorant Garamond', serif; letter-spacing: 0.15em; font-weight: 300; }
+        .accent-color { color: #9b8579; }
+        .accent-bg { background-color: #c9b8a8; }
+        .hover-accent:hover { background-color: #b8a99a; }
+        .pastel-bg { background-color: #f5f1ed; }
+        .tab-button.active { border-color: #c9b8a8; color: #9b8579; }
+        .tab-content.hidden { display: none; }
+        .calendar-day {
+            min-height: 60px;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .calendar-day:hover {
+            background-color: #f3f4f6;
+            transform: scale(1.02);
+        }
+        .calendar-day.working {
+            background-color: #dcfce7;
+            border-color: #16a34a;
+        }
+        .calendar-day.off {
+            background-color: #fecaca;
+            border-color: #dc2626;
+        }
+        .calendar-day.other-month {
+            color: #9ca3af;
+            background-color: #f9fafb;
+        }
+        .calendar-day .day-number {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .calendar-day .day-time {
+            font-size: 10px;
+            margin-top: 2px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="pastel-bg">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl logo-font accent-color mb-2">КОНТИНЕНТ</h1>
+                <h2 class="text-xl font-semibold text-gray-800">Админ-панель</h2>
+                <p class="text-gray-600 text-sm mt-2">Введите пароль для доступа</p>
+            </div>
+            
+            <form onsubmit="checkPassword(event)">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Пароль</label>
+                    <input type="password" id="passwordInput" required 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                        placeholder="Введите пароль">
+                </div>
+                
+                <button type="submit" class="w-full accent-bg hover-accent text-white py-3 rounded-lg font-semibold transition">
+                    Войти в систему
+                </button>
+            </form>
+            
+            <div id="errorMessage" class="hidden mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-red-800 text-sm">Неверный пароль. Попробуйте еще раз.</p>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <a href="index.html" class="text-gray-500 hover:text-gray-700 text-sm">← Вернуться на главную</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Admin Content (hidden by default) -->
+    <div id="adminContent" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm py-5">
+            <div class="container mx-auto px-6 flex justify-between items-center">
+                <h1 class="text-3xl logo-font accent-color">КОНТИНЕНТ — Админ-панель</h1>
+                <nav class="flex space-x-6">
+                    <a href="index.html" class="text-gray-700 hover:text-gray-900 transition">Главная</a>
+                    <a href="crm.html" class="text-gray-700 hover:text-gray-900 transition">CRM</a>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-800 transition">Выйти</button>
+                </nav>
+            </div>
+        </header>
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-10">
+        <!-- Navigation Tabs -->
+        <div class="mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8">
+                    <button onclick="showTab('masters')" id="mastersTab" class="tab-button active py-2 px-1 border-b-2 border-gray-400 font-medium text-sm text-gray-800">
+                        Мастера
+                    </button>
+                    <button onclick="showTab('services')" id="servicesTab" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        Услуги
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Masters Tab -->
+        <div id="mastersContent" class="tab-content">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Add Master Section -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h2 class="text-2xl logo-font mb-6 text-gray-800">Добавить мастера</h2>
+                    
+                    <form id="addMasterForm" onsubmit="addMaster(event)">
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ФИО мастера</label>
+                            <input type="text" id="masterName" required 
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                                placeholder="Например: Анна Иванова">
+                        </div>
+
+                        <!-- Work Schedule -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">График работы на месяц</label>
+                            <div class="border border-gray-300 rounded-lg p-4">
+                                <!-- Month/Year selector -->
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-4">
+                                        <select id="scheduleMonth" class="p-2 border border-gray-300 rounded text-sm">
+                                            <option value="0">Январь</option>
+                                            <option value="1">Февраль</option>
+                                            <option value="2">Март</option>
+                                            <option value="3">Апрель</option>
+                                            <option value="4">Май</option>
+                                            <option value="5">Июнь</option>
+                                            <option value="6">Июль</option>
+                                            <option value="7">Август</option>
+                                            <option value="8">Сентябрь</option>
+                                            <option value="9">Октябрь</option>
+                                            <option value="10">Ноябрь</option>
+                                            <option value="11">Декабрь</option>
+                                        </select>
+                                        <input type="number" id="scheduleYear" min="2024" max="2030" class="p-2 border border-gray-300 rounded text-sm w-20">
+                                        <button type="button" onclick="generateMonthSchedule()" class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700">
+                                            Создать календарь
+                                        </button>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <button type="button" onclick="setDefaultSchedule()" class="bg-gray-600 text-white px-3 py-2 rounded text-sm hover:bg-gray-700">
+                                            Стандартный график
+                                        </button>
+                                        <button type="button" onclick="clearSchedule()" class="bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700">
+                                            Очистить
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Calendar Grid -->
+                                <div id="monthCalendar" class="grid grid-cols-7 gap-1 text-xs">
+                                    <div class="text-center font-semibold p-2 bg-gray-100">Пн</div>
+                                    <div class="text-center font-semibold p-2 bg-gray-100">Вт</div>
+                                    <div class="text-center font-semibold p-2 bg-gray-100">Ср</div>
+                                    <div class="text-center font-semibold p-2 bg-gray-100">Чт</div>
+                                    <div class="text-center font-semibold p-2 bg-gray-100">Пт</div>
+                                    <div class="text-center font-semibold p-2 bg-gray-100">Сб</div>
+                                    <div class="text-center font-semibold p-2 bg-gray-100">Вс</div>
+                                    <!-- Days will be generated here -->
+                                </div>
+                                
+                                <div class="mt-4 text-xs text-gray-600">
+                                    <p><strong>Инструкция:</strong> Кликните на дату для настройки времени работы. Красные дни - выходные, зеленые - рабочие.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Услуги мастера</label>
+                            <div class="space-y-4" id="servicesCheckboxes"></div>
+                        </div>
+
+                        <button type="submit" class="w-full accent-bg hover-accent text-white py-3 rounded-lg font-semibold transition">
+                            Добавить мастера
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Masters List Section -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h2 class="text-2xl logo-font mb-6 text-gray-800">Список мастеров</h2>
+                    <div id="mastersList" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Tab -->
+        <div id="servicesContent" class="tab-content hidden">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Add Service Section -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h2 class="text-2xl logo-font mb-6 text-gray-800">Добавить услугу</h2>
+                    
+                    <form id="addServiceForm" onsubmit="addService(event)">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Название услуги</label>
+                            <input type="text" id="serviceName" required 
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                                placeholder="Например: Женская стрижка">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Категория</label>
+                            <select id="serviceCategory" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent">
+                                <option value="">Выберите категорию</option>
+                                <option value="Мужской зал">Мужской зал</option>
+                                <option value="Женский зал">Женский зал</option>
+                                <option value="Ногтевой сервис">Ногтевой сервис</option>
+                                <option value="Косметология">Косметология</option>
+                                <option value="Брови и ресницы">Брови и ресницы</option>
+                                <option value="Дополнительно">Дополнительно</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Длительность (минуты)</label>
+                            <input type="number" id="serviceDuration" required min="15" max="300" step="15"
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                                placeholder="60">
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Цена (рублей)</label>
+                            <input type="number" id="servicePrice" required min="0" step="100"
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                                placeholder="2500">
+                        </div>
+
+                        <button type="submit" class="w-full accent-bg hover-accent text-white py-3 rounded-lg font-semibold transition">
+                            Добавить услугу
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Services List Section -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h2 class="text-2xl logo-font mb-6 text-gray-800">Список услуг</h2>
+                    <div id="servicesList" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Master Modal -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-30 hidden items-center justify-center z-50" style="backdrop-filter: blur(4px);">
+        <div class="bg-white rounded-2xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 class="text-2xl logo-font mb-6 text-gray-800">Редактировать мастера</h3>
+            
+            <form id="editMasterForm" onsubmit="saveMaster(event)">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ФИО мастера</label>
+                    <input type="text" id="editMasterName" required 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent">
+                </div>
+
+                <!-- Edit Work Schedule -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">График работы на месяц</label>
+                    <div class="border border-gray-300 rounded-lg p-4">
+                        <!-- Month/Year selector -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-4">
+                                <select id="editScheduleMonth" class="p-2 border border-gray-300 rounded text-sm">
+                                    <option value="0">Январь</option>
+                                    <option value="1">Февраль</option>
+                                    <option value="2">Март</option>
+                                    <option value="3">Апрель</option>
+                                    <option value="4">Май</option>
+                                    <option value="5">Июнь</option>
+                                    <option value="6">Июль</option>
+                                    <option value="7">Август</option>
+                                    <option value="8">Сентябрь</option>
+                                    <option value="9">Октябрь</option>
+                                    <option value="10">Ноябрь</option>
+                                    <option value="11">Декабрь</option>
+                                </select>
+                                <input type="number" id="editScheduleYear" min="2024" max="2030" class="p-2 border border-gray-300 rounded text-sm w-20">
+                                <button type="button" onclick="generateEditMonthSchedule()" class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700">
+                                    Создать календарь
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button type="button" onclick="setEditDefaultSchedule()" class="bg-gray-600 text-white px-3 py-2 rounded text-sm hover:bg-gray-700">
+                                    Стандартный график
+                                </button>
+                                <button type="button" onclick="clearEditSchedule()" class="bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700">
+                                    Очистить
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Calendar Grid -->
+                        <div id="editMonthCalendar" class="grid grid-cols-7 gap-1 text-xs">
+                            <div class="text-center font-semibold p-2 bg-gray-100">Пн</div>
+                            <div class="text-center font-semibold p-2 bg-gray-100">Вт</div>
+                            <div class="text-center font-semibold p-2 bg-gray-100">Ср</div>
+                            <div class="text-center font-semibold p-2 bg-gray-100">Чт</div>
+                            <div class="text-center font-semibold p-2 bg-gray-100">Пт</div>
+                            <div class="text-center font-semibold p-2 bg-gray-100">Сб</div>
+                            <div class="text-center font-semibold p-2 bg-gray-100">Вс</div>
+                            <!-- Days will be generated here -->
+                        </div>
+                        
+                        <div class="mt-4 text-xs text-gray-600">
+                            <p><strong>Инструкция:</strong> Кликните на дату для настройки времени работы. Красные дни - выходные, зеленые - рабочие.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Услуги мастера</label>
+                    <div class="space-y-4" id="editServicesCheckboxes"></div>
+                </div>
+
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 accent-bg hover-accent text-white py-3 rounded-lg font-semibold transition">
+                        Сохранить
+                    </button>
+                    <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-3 rounded-lg font-semibold transition">
+                        Отмена
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Day Schedule Modal -->
+    <div id="dayScheduleModal" class="fixed inset-0 bg-black bg-opacity-30 hidden items-center justify-center z-50" style="backdrop-filter: blur(4px);">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <h3 class="text-xl logo-font mb-4 text-gray-800">Настройка дня</h3>
+            <p class="text-sm text-gray-600 mb-4">Дата: <span id="selectedDate" class="font-semibold"></span></p>
+            
+            <div class="mb-4">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" id="dayOff" class="w-4 h-4" onchange="toggleDayInputs()">
+                    <span class="text-sm font-medium text-gray-700">Выходной день</span>
+                </label>
+            </div>
+            
+            <div id="timeInputs" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Время начала работы</label>
+                    <input type="time" id="dayStartTime" class="w-full p-2 border border-gray-300 rounded-lg" value="09:00">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Время окончания работы</label>
+                    <input type="time" id="dayEndTime" class="w-full p-2 border border-gray-300 rounded-lg" value="18:00">
+                </div>
+            </div>
+            
+            <div class="flex space-x-4 mt-6">
+                <button onclick="saveDaySchedule()" class="flex-1 accent-bg hover-accent text-white py-2 rounded-lg font-semibold transition">
+                    Сохранить
+                </button>
+                <button onclick="closeDayScheduleModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg font-semibold transition">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Полный список услуг (синхронизирован с booking.js)
+        let SERVICES = [
+            { id: 'mens_haircut', name: 'Мужская стрижка', duration: 30, category: 'Мужской зал', price: 1500 },
+            { id: 'beard_trim', name: 'Стрижка бороды', duration: 30, category: 'Мужской зал', price: 800 },
+            { id: 'beard_modeling', name: 'Моделирование бороды', duration: 60, category: 'Мужской зал', price: 1200 },
+            { id: 'royal_shave', name: 'Королевское бритье', duration: 60, category: 'Мужской зал', price: 2000 },
+            { id: 'gray_camouflage', name: 'Камуфляж седины', duration: 60, category: 'Мужской зал', price: 1500 },
+            
+            { id: 'womens_haircut', name: 'Женская стрижка', duration: 60, category: 'Женский зал', price: 2500 },
+            { id: 'complex_coloring', name: 'Сложное окрашивание', duration: 180, category: 'Женский зал', price: 8000 },
+            { id: 'balayage', name: 'Балаяж / Шатуш', duration: 180, category: 'Женский зал', price: 9000 },
+            { id: 'styling', name: 'Укладка', duration: 60, category: 'Женский зал', price: 1800 },
+            { id: 'hair_lamination', name: 'Ламинирование волос', duration: 120, category: 'Женский зал', price: 3500 },
+            
+            { id: 'manicure', name: 'Маникюр', duration: 90, category: 'Ногтевой сервис', price: 1500 },
+            { id: 'pedicure', name: 'Педикюр', duration: 90, category: 'Ногтевой сервис', price: 2000 },
+            { id: 'nail_extension', name: 'Наращивание ногтей', duration: 120, category: 'Ногтевой сервис', price: 3000 },
+            { id: 'nail_design', name: 'Дизайн ногтей', duration: 60, category: 'Ногтевой сервис', price: 500 },
+            { id: 'nail_strengthening', name: 'Укрепление ногтей', duration: 60, category: 'Ногтевой сервис', price: 800 },
+            
+            { id: 'facial_cleaning', name: 'Чистка лица', duration: 90, category: 'Косметология', price: 3500 },
+            { id: 'peeling', name: 'Пилинги', duration: 60, category: 'Косметология', price: 2500 },
+            { id: 'face_massage', name: 'Массаж лица', duration: 60, category: 'Косметология', price: 2000 },
+            { id: 'facial_treatment', name: 'Уходовые процедуры', duration: 90, category: 'Косметология', price: 4000 },
+            { id: 'mesotherapy', name: 'Мезотерапия', duration: 60, category: 'Косметология', price: 5000 },
+            
+            { id: 'brow_shaping', name: 'Оформление бровей', duration: 60, category: 'Брови и ресницы', price: 800 },
+            { id: 'brow_coloring', name: 'Окрашивание бровей', duration: 60, category: 'Брови и ресницы', price: 600 },
+            { id: 'brow_lamination', name: 'Ламинирование бровей', duration: 90, category: 'Брови и ресницы', price: 2000 },
+            { id: 'lash_extension', name: 'Наращивание ресниц', duration: 120, category: 'Брови и ресницы', price: 2500 },
+            { id: 'lash_lamination', name: 'Ламинирование ресниц', duration: 90, category: 'Брови и ресницы', price: 1800 },
+            
+            { id: 'makeup', name: 'Визаж', duration: 60, category: 'Дополнительно', price: 2500 },
+            { id: 'wedding_look', name: 'Свадебный образ', duration: 180, category: 'Дополнительно', price: 8000 },
+            { id: 'evening_makeup', name: 'Вечерний макияж', duration: 90, category: 'Дополнительно', price: 3500 },
+            { id: 'stylist_consultation', name: 'Консультация стилиста', duration: 60, category: 'Дополнительно', price: 2000 },
+        ];
+
+        let currentEditMasterId = null;
+        let currentScheduleData = {};
+        let currentEditScheduleData = {};
+        let selectedDateForEdit = null;
+        let isEditMode = false;
+
+        // Инициализация (только после авторизации)
+
+        // Загрузка услуг из localStorage
+        function loadServicesFromStorage() {
+            const savedServices = localStorage.getItem('services');
+            if (savedServices) {
+                SERVICES = JSON.parse(savedServices);
+            } else {
+                // Сохраняем дефолтные услуги при первом запуске
+                localStorage.setItem('services', JSON.stringify(SERVICES));
+            }
+        }
+
+        // Переключение табов
+        function showTab(tabName) {
+            // Скрыть все табы
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            
+            // Показать выбранный таб
+            document.getElementById(tabName + 'Content').classList.remove('hidden');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            if (tabName === 'services') {
+                loadServicesList();
+            }
+        }
+
+        // Функции для работы с месячным календарем
+        function generateMonthSchedule() {
+            isEditMode = false;
+            const month = parseInt(document.getElementById('scheduleMonth').value);
+            const year = parseInt(document.getElementById('scheduleYear').value);
+            generateCalendar('monthCalendar', month, year, currentScheduleData);
+        }
+
+        function generateEditMonthSchedule() {
+            isEditMode = true;
+            const month = parseInt(document.getElementById('editScheduleMonth').value);
+            const year = parseInt(document.getElementById('editScheduleYear').value);
+            generateCalendar('editMonthCalendar', month, year, currentEditScheduleData);
+        }
+
+        function generateCalendar(containerId, month, year, scheduleData) {
+            const container = document.getElementById(containerId);
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = (firstDay.getDay() + 6) % 7; // Понедельник = 0
+            
+            // Очищаем календарь, оставляя заголовки
+            const headers = container.querySelectorAll('.font-semibold');
+            container.innerHTML = '';
+            headers.forEach(header => container.appendChild(header));
+            
+            // Добавляем пустые ячейки для дней предыдущего месяца
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day other-month';
+                container.appendChild(emptyDay);
+            }
+            
+            // Добавляем дни текущего месяца
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                dayElement.className = 'calendar-day';
+                dayElement.onclick = () => openDayScheduleModal(dateKey);
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'day-number';
+                dayNumber.textContent = day;
+                dayElement.appendChild(dayNumber);
+                
+                // Проверяем, есть ли данные для этого дня
+                if (scheduleData[dateKey]) {
+                    const dayTime = document.createElement('div');
+                    dayTime.className = 'day-time';
+                    
+                    if (scheduleData[dateKey].isOff) {
+                        dayElement.classList.add('off');
+                        dayTime.textContent = 'Выходной';
+                    } else {
+                        dayElement.classList.add('working');
+                        dayTime.textContent = `${scheduleData[dateKey].start}-${scheduleData[dateKey].end}`;
+                    }
+                    
+                    dayElement.appendChild(dayTime);
+                }
+                
+                container.appendChild(dayElement);
+            }
+        }
+
+        function openDayScheduleModal(dateKey) {
+            selectedDateForEdit = dateKey;
+            const scheduleData = isEditMode ? currentEditScheduleData : currentScheduleData;
+            
+            document.getElementById('selectedDate').textContent = formatDateForDisplay(dateKey);
+            
+            if (scheduleData[dateKey]) {
+                document.getElementById('dayOff').checked = scheduleData[dateKey].isOff || false;
+                document.getElementById('dayStartTime').value = scheduleData[dateKey].start || '09:00';
+                document.getElementById('dayEndTime').value = scheduleData[dateKey].end || '18:00';
+            } else {
+                // Дефолтные значения
+                const date = new Date(dateKey);
+                const dayOfWeek = date.getDay();
+                document.getElementById('dayOff').checked = dayOfWeek === 0; // Воскресенье
+                document.getElementById('dayStartTime').value = (dayOfWeek === 6 || dayOfWeek === 0) ? '10:00' : '09:00';
+                document.getElementById('dayEndTime').value = dayOfWeek === 6 ? '17:00' : dayOfWeek === 0 ? '16:00' : '18:00';
+            }
+            
+            toggleDayInputs();
+            document.getElementById('dayScheduleModal').classList.remove('hidden');
+            document.getElementById('dayScheduleModal').classList.add('flex');
+        }
+
+        function toggleDayInputs() {
+            const isOff = document.getElementById('dayOff').checked;
+            const timeInputs = document.getElementById('timeInputs');
+            timeInputs.style.opacity = isOff ? '0.5' : '1';
+            timeInputs.style.pointerEvents = isOff ? 'none' : 'auto';
+        }
+
+        function saveDaySchedule() {
+            const scheduleData = isEditMode ? currentEditScheduleData : currentScheduleData;
+            
+            scheduleData[selectedDateForEdit] = {
+                start: document.getElementById('dayStartTime').value,
+                end: document.getElementById('dayEndTime').value,
+                isOff: document.getElementById('dayOff').checked
+            };
+            
+            closeDayScheduleModal();
+            
+            // Обновляем календарь
+            if (isEditMode) {
+                generateEditMonthSchedule();
+            } else {
+                generateMonthSchedule();
+            }
+        }
+
+        function closeDayScheduleModal() {
+            document.getElementById('dayScheduleModal').classList.add('hidden');
+            document.getElementById('dayScheduleModal').classList.remove('flex');
+            selectedDateForEdit = null;
+        }
+
+        function setDefaultSchedule() {
+            const month = parseInt(document.getElementById('scheduleMonth').value);
+            const year = parseInt(document.getElementById('scheduleYear').value);
+            setDefaultScheduleForMonth(currentScheduleData, month, year);
+            generateMonthSchedule();
+        }
+
+        function setEditDefaultSchedule() {
+            const month = parseInt(document.getElementById('editScheduleMonth').value);
+            const year = parseInt(document.getElementById('editScheduleYear').value);
+            setDefaultScheduleForMonth(currentEditScheduleData, month, year);
+            generateEditMonthSchedule();
+        }
+
+        function setDefaultScheduleForMonth(scheduleData, month, year) {
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dayOfWeek = date.getDay();
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                scheduleData[dateKey] = {
+                    start: (dayOfWeek === 6 || dayOfWeek === 0) ? '10:00' : '09:00',
+                    end: dayOfWeek === 6 ? '17:00' : dayOfWeek === 0 ? '16:00' : '18:00',
+                    isOff: dayOfWeek === 0 // Воскресенье - выходной
+                };
+            }
+        }
+
+        function clearSchedule() {
+            currentScheduleData = {};
+            generateMonthSchedule();
+        }
+
+        function clearEditSchedule() {
+            currentEditScheduleData = {};
+            generateEditMonthSchedule();
+        }
+
+        function formatDateForDisplay(dateKey) {
+            const date = new Date(dateKey);
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            return date.toLocaleDateString('ru-RU', options);
+        }
+
+        // Рендер чекбоксов услуг
+        function renderServicesCheckboxes(containerId, selectedServices = []) {
+            const container = document.getElementById(containerId);
+            const groupedServices = {};
+            
+            SERVICES.forEach(service => {
+                if (!groupedServices[service.category]) {
+                    groupedServices[service.category] = [];
+                }
+                groupedServices[service.category].push(service);
+            });
+            
+            let html = '';
+            Object.keys(groupedServices).forEach(category => {
+                html += `<div class="border-l-4 border-gray-400 pl-4 bg-gray-50 p-3 rounded">
+                    <h4 class="font-semibold text-gray-800 mb-2">${category}</h4>
+                    <div class="space-y-2">`;
+                
+                groupedServices[category].forEach(service => {
+                    const checked = selectedServices.includes(service.id) ? 'checked' : '';
+                    html += `<label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="services" value="${service.id}" ${checked}
+                            class="w-4 h-4 text-gray-600 border-gray-300 rounded focus:ring-gray-400">
+                        <span class="text-gray-700">${service.name}</span>
+                    </label>`;
+                });
+                
+                html += `</div></div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Добавление мастера
+        function addMaster(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('masterName').value.trim();
+            const checkboxes = document.querySelectorAll('#servicesCheckboxes input[name="services"]:checked');
+            const services = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (!name) {
+                alert('Введите ФИО мастера');
+                return;
+            }
+            
+            if (services.length === 0) {
+                alert('Выберите хотя бы одну услугу');
+                return;
+            }
+            
+            const masters = JSON.parse(localStorage.getItem('masters') || '[]');
+            const newMaster = {
+                id: Date.now(),
+                name: name,
+                services: services,
+                schedule: { ...currentScheduleData } // Копируем график
+            };
+            
+            masters.push(newMaster);
+            localStorage.setItem('masters', JSON.stringify(masters));
+            
+            document.getElementById('addMasterForm').reset();
+            currentScheduleData = {}; // Очищаем график
+            document.getElementById('monthCalendar').innerHTML = `
+                <div class="text-center font-semibold p-2 bg-gray-100">Пн</div>
+                <div class="text-center font-semibold p-2 bg-gray-100">Вт</div>
+                <div class="text-center font-semibold p-2 bg-gray-100">Ср</div>
+                <div class="text-center font-semibold p-2 bg-gray-100">Чт</div>
+                <div class="text-center font-semibold p-2 bg-gray-100">Пт</div>
+                <div class="text-center font-semibold p-2 bg-gray-100">Сб</div>
+                <div class="text-center font-semibold p-2 bg-gray-100">Вс</div>
+            `;
+            loadMasters();
+            alert('Мастер успешно добавлен!');
+        }
+
+        // Загрузка списка мастеров
+        function loadMasters() {
+            const masters = JSON.parse(localStorage.getItem('masters') || '[]');
+            const container = document.getElementById('mastersList');
+            
+            if (masters.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Нет добавленных мастеров</p>';
+                return;
+            }
+            
+            let html = '';
+            masters.forEach(master => {
+                const serviceNames = master.services.map(sid => {
+                    const service = SERVICES.find(s => s.id === sid);
+                    return service ? service.name : sid;
+                });
+                
+                // Формирование строки графика работы
+                const scheduleText = getScheduleText(master.schedule);
+                
+                html += `<div class="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">${master.name}</h3>
+                        <div class="flex space-x-2">
+                            <button onclick="editMaster(${master.id})" 
+                                class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                                Редактировать
+                            </button>
+                            <button onclick="deleteMaster(${master.id})" 
+                                class="text-red-600 hover:text-red-800 font-medium text-sm">
+                                Удалить
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 mb-3">
+                        <strong>График работы:</strong><br>
+                        <span class="text-xs">${scheduleText}</span>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <strong>Услуги (${master.services.length}):</strong>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            ${serviceNames.map(name => 
+                                `<span class="bg-gray-100 px-3 py-1 rounded-full text-xs">${name}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Получение текстового описания графика работы
+        function getScheduleText(schedule) {
+            if (!schedule || Object.keys(schedule).length === 0) return 'Не настроен';
+            
+            const dates = Object.keys(schedule).sort();
+            if (dates.length === 0) return 'Не настроен';
+            
+            const workingDays = dates.filter(date => !schedule[date].isOff).length;
+            const offDays = dates.filter(date => schedule[date].isOff).length;
+            
+            let result = `Настроен на ${dates.length} дней`;
+            if (workingDays > 0) result += `, рабочих: ${workingDays}`;
+            if (offDays > 0) result += `, выходных: ${offDays}`;
+            
+            return result;
+        }
+
+        // Редактирование мастера
+        function editMaster(masterId) {
+            const masters = JSON.parse(localStorage.getItem('masters') || '[]');
+            const master = masters.find(m => m.id === masterId);
+            
+            if (!master) return;
+            
+            currentEditMasterId = masterId;
+            document.getElementById('editMasterName').value = master.name;
+            renderServicesCheckboxes('editServicesCheckboxes', master.services);
+            
+            // Загружаем график мастера
+            currentEditScheduleData = master.schedule ? { ...master.schedule } : {};
+            
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.add('flex');
+        }
+
+        // Сохранение изменений мастера
+        function saveMaster(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('editMasterName').value.trim();
+            const checkboxes = document.querySelectorAll('#editServicesCheckboxes input[name="services"]:checked');
+            const services = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (!name) {
+                alert('Введите ФИО мастера');
+                return;
+            }
+            
+            if (services.length === 0) {
+                alert('Выберите хотя бы одну услугу');
+                return;
+            }
+            
+            const masters = JSON.parse(localStorage.getItem('masters') || '[]');
+            const index = masters.findIndex(m => m.id === currentEditMasterId);
+            
+            if (index !== -1) {
+                masters[index].name = name;
+                masters[index].services = services;
+                masters[index].schedule = { ...currentEditScheduleData }; // Сохраняем график
+                localStorage.setItem('masters', JSON.stringify(masters));
+                loadMasters();
+                closeEditModal();
+                alert('Изменения сохранены!');
+            }
+        }
+
+        // Закрытие модального окна
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').classList.remove('flex');
+            currentEditMasterId = null;
+            currentEditScheduleData = {};
+        }
+
+        // Удаление мастера
+        function deleteMaster(masterId) {
+            if (!confirm('Вы уверены, что хотите удалить этого мастера?')) return;
+            
+            const masters = JSON.parse(localStorage.getItem('masters') || '[]');
+            const filtered = masters.filter(m => m.id !== masterId);
+            localStorage.setItem('masters', JSON.stringify(filtered));
+            loadMasters();
+            alert('Мастер удален');
+        }
+        // Функции управления услугами
+        function addService(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('serviceName').value.trim();
+            const category = document.getElementById('serviceCategory').value;
+            const duration = parseInt(document.getElementById('serviceDuration').value);
+            const price = parseInt(document.getElementById('servicePrice').value);
+            
+            if (!name || !category || !duration || !price) {
+                alert('Заполните все поля');
+                return;
+            }
+            
+            // Генерируем ID из названия
+            const id = name.toLowerCase()
+                .replace(/[^а-яё\s]/gi, '')
+                .replace(/\s+/g, '_')
+                .replace(/[^a-z0-9_]/gi, '');
+            
+            // Проверяем уникальность ID
+            if (SERVICES.find(s => s.id === id)) {
+                alert('Услуга с таким названием уже существует');
+                return;
+            }
+            
+            const newService = {
+                id: id,
+                name: name,
+                category: category,
+                duration: duration,
+                price: price
+            };
+            
+            SERVICES.push(newService);
+            localStorage.setItem('services', JSON.stringify(SERVICES));
+            
+            document.getElementById('addServiceForm').reset();
+            loadServicesList();
+            renderServicesCheckboxes('servicesCheckboxes');
+            alert('Услуга успешно добавлена!');
+        }
+
+        function loadServicesList() {
+            const container = document.getElementById('servicesList');
+            
+            if (SERVICES.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">Нет добавленных услуг</p>';
+                return;
+            }
+            
+            // Группируем услуги по категориям
+            const groupedServices = {};
+            SERVICES.forEach(service => {
+                if (!groupedServices[service.category]) {
+                    groupedServices[service.category] = [];
+                }
+                groupedServices[service.category].push(service);
+            });
+            
+            let html = '';
+            Object.keys(groupedServices).forEach(category => {
+                html += `<div class="mb-6">
+                    <h4 class="font-semibold text-gray-800 mb-3 border-b pb-2">${category}</h4>`;
+                
+                groupedServices[category].forEach(service => {
+                    html += `<div class="border border-gray-200 rounded-lg p-4 mb-2 hover:shadow-md transition">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h5 class="font-medium text-gray-900">${service.name}</h5>
+                                <div class="text-sm text-gray-600 mt-1">
+                                    <span class="mr-4">⏱️ ${service.duration} мин</span>
+                                    <span>💰 ${service.price}₽</span>
+                                </div>
+                            </div>
+                            <button onclick="deleteService('${service.id}')" 
+                                class="text-red-600 hover:text-red-800 font-medium text-sm ml-4">
+                                Удалить
+                            </button>
+                        </div>
+                    </div>`;
+                });
+                
+                html += `</div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function deleteService(serviceId) {
+            if (!confirm('Вы уверены, что хотите удалить эту услугу?')) return;
+            
+            // Проверяем, используется ли услуга мастерами
+            const masters = JSON.parse(localStorage.getItem('masters') || '[]');
+            const mastersUsingService = masters.filter(master => 
+                master.services && master.services.includes(serviceId)
+            );
+            
+            if (mastersUsingService.length > 0) {
+                const masterNames = mastersUsingService.map(m => m.name).join(', ');
+                if (!confirm(`Эта услуга используется мастерами: ${masterNames}. Удалить все равно?`)) {
+                    return;
+                }
+                
+                // Удаляем услугу у всех мастеров
+                masters.forEach(master => {
+                    if (master.services) {
+                        master.services = master.services.filter(sid => sid !== serviceId);
+                    }
+                });
+                localStorage.setItem('masters', JSON.stringify(masters));
+            }
+            
+            // Удаляем услугу
+            const serviceIndex = SERVICES.findIndex(s => s.id === serviceId);
+            if (serviceIndex !== -1) {
+                SERVICES.splice(serviceIndex, 1);
+                localStorage.setItem('services', JSON.stringify(SERVICES));
+                loadServicesList();
+                renderServicesCheckboxes('servicesCheckboxes');
+                loadMasters(); // Обновляем список мастеров
+                alert('Услуга удалена');
+            }
+        }
+    </script>
+    </div> <!-- End of adminContent -->
+
+    <script>
+        // Система авторизации
+        const ADMIN_PASSWORD = '00000'; // Пароль для админ-панели
+        
+        // Проверка авторизации при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('adminAuthorized') === 'true') {
+                showAdmin();
+            }
+        });
+        
+        function checkPassword(event) {
+            event.preventDefault();
+            const password = document.getElementById('passwordInput').value;
+            
+            if (password === ADMIN_PASSWORD) {
+                sessionStorage.setItem('adminAuthorized', 'true');
+                showAdmin();
+            } else {
+                document.getElementById('errorMessage').classList.remove('hidden');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
+        }
+        
+        function showAdmin() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminContent').classList.remove('hidden');
+            // Инициализация админ-панели после авторизации
+            loadServicesFromStorage();
+            renderServicesCheckboxes('servicesCheckboxes');
+            loadMasters();
+            loadServicesList();
+            
+            // Установка текущего месяца и года
+            const now = new Date();
+            document.getElementById('scheduleMonth').value = now.getMonth();
+            document.getElementById('scheduleYear').value = now.getFullYear();
+            document.getElementById('editScheduleMonth').value = now.getMonth();
+            document.getElementById('editScheduleYear').value = now.getFullYear();
+        }
+        
+        function logout() {
+            sessionStorage.removeItem('adminAuthorized');
+            document.getElementById('adminContent').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('errorMessage').classList.add('hidden');
+            
+            // Очистка данных формы
+            currentScheduleData = {};
+            currentEditScheduleData = {};
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM — Континент</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Montserrat', sans-serif; }
+        .logo-font { font-family: 'Cormorant Garamond', serif; letter-spacing: 0.15em; font-weight: 300; }
+        .accent-color { color: #9b8579; }
+        .accent-bg { background-color: #c9b8a8; }
+        .hover-accent:hover { background-color: #b8a99a; }
+        .pastel-bg { background-color: #f5f1ed; }
+        .status-new { background-color: #8ba8c4; }
+        .status-confirmed { background-color: #a8c9a4; }
+        .status-completed { background-color: #b8a99a; }
+        .status-cancelled { background-color: #d4a5a5; }
+    </style>
+</head>
+<body class="pastel-bg">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl logo-font accent-color mb-2">КОНТИНЕНТ</h1>
+                <h2 class="text-xl font-semibold text-gray-800">CRM-система</h2>
+                <p class="text-gray-600 text-sm mt-2">Введите пароль для доступа</p>
+            </div>
+            
+            <form onsubmit="checkPassword(event)">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Пароль</label>
+                    <input type="password" id="passwordInput" required 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                        placeholder="Введите пароль">
+                </div>
+                
+                <button type="submit" class="w-full accent-bg hover-accent text-white py-3 rounded-lg font-semibold transition">
+                    Войти в систему
+                </button>
+            </form>
+            
+            <div id="errorMessage" class="hidden mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-red-800 text-sm">Неверный пароль. Попробуйте еще раз.</p>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <a href="index.html" class="text-gray-500 hover:text-gray-700 text-sm">← Вернуться на главную</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main CRM Content (hidden by default) -->
+    <div id="crmContent" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm py-5">
+            <div class="container mx-auto px-6 flex justify-between items-center">
+                <h1 class="text-3xl logo-font accent-color">КОНТИНЕНТ — CRM</h1>
+                <nav class="flex space-x-6">
+                    <a href="index.html" class="text-gray-700 hover:text-gray-900 transition">Главная</a>
+                    <a href="admin.html" class="text-gray-700 hover:text-gray-900 transition">Админ-панель</a>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-800 transition">Выйти</button>
+                </nav>
+            </div>
+        </header>
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-10">
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl logo-font text-gray-800">Управление заявками</h2>
+                <div class="flex space-x-4">
+                    <div class="relative">
+                        <input type="file" id="importFile" accept=".csv,.xlsx,.xls" class="hidden" onchange="importData()">
+                        <button onclick="document.getElementById('importFile').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition flex items-center">
+                            📁 Загрузить данные
+                        </button>
+                    </div>
+                    <button onclick="exportToCSV()" class="accent-bg hover-accent text-white px-6 py-2 rounded-lg transition flex items-center">
+                        📊 Экспорт CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Import Status -->
+            <div id="importStatus" class="hidden mb-6 p-4 rounded-lg">
+                <div class="flex items-center">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-3"></div>
+                    <span id="importMessage">Загрузка данных...</span>
+                </div>
+            </div>
+
+        
+
+            <!-- Data Preview -->
+            <div id="dataPreview" class="hidden mb-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-800">Предварительный просмотр данных</h3>
+                <div class="bg-gray-50 p-4 rounded-lg max-h-60 overflow-auto">
+                    <table class="w-full text-sm">
+                        <thead id="previewHeaders"></thead>
+                        <tbody id="previewData"></tbody>
+                    </table>
+                </div>
+                <div class="mt-4 flex space-x-4">
+                    <button onclick="confirmImport()" class="accent-bg hover-accent text-white px-6 py-2 rounded-lg transition">
+                        Подтвердить импорт
+                    </button>
+                    <button onclick="cancelImport()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg transition">
+                        Отмена
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="mb-6 grid md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Дата</label>
+                    <input type="date" id="filterDate" onchange="loadBookings()" class="w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Мастер</label>
+                    <select id="filterMaster" onchange="loadBookings()" class="w-full p-2 border border-gray-300 rounded-lg">
+                        <option value="">Все мастера</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Статус</label>
+                    <select id="filterStatus" onchange="loadBookings()" class="w-full p-2 border border-gray-300 rounded-lg">
+                        <option value="">Все статусы</option>
+                        <option value="Новая">Новая</option>
+                        <option value="Подтверждена">Подтверждена</option>
+                        <option value="Завершена">Завершена</option>
+                        <option value="Отменена">Отменена</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="clearFilters()" class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition">
+                        Сбросить фильтры
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-300">
+                    <div class="text-3xl font-bold text-blue-600" id="statNew">0</div>
+                    <div class="text-gray-600 mt-2">Новые заявки</div>
+                </div>
+                <div class="bg-green-50 p-6 rounded-xl border-l-4 border-green-300">
+                    <div class="text-3xl font-bold text-green-600" id="statConfirmed">0</div>
+                    <div class="text-gray-600 mt-2">Подтверждены</div>
+                </div>
+                <div class="bg-amber-50 p-6 rounded-xl border-l-4 border-amber-300">
+                    <div class="text-3xl font-bold text-amber-600" id="statCompleted">0</div>
+                    <div class="text-gray-600 mt-2">Завершены</div>
+                </div>
+                <div class="bg-red-50 p-6 rounded-xl border-l-4 border-red-300">
+                    <div class="text-3xl font-bold text-red-600" id="statCancelled">0</div>
+                    <div class="text-gray-600 mt-2">Отменены</div>
+                </div>
+            </div>
+
+            <!-- Bookings Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Дата</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Время</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Клиент</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Мастер</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Услуга</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Телефон</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Статус</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsTable">
+                        <tr>
+                            <td colspan="9" class="px-4 py-8 text-center text-gray-500">Загрузка...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Status Modal -->
+    <div id="statusModal" class="fixed inset-0 bg-black bg-opacity-30 hidden items-center justify-center z-50" style="backdrop-filter: blur(4px);">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <h3 class="text-2xl logo-font mb-6 text-gray-800">Изменить статус</h3>
+            <select id="newStatus" class="w-full p-3 border border-gray-300 rounded-lg mb-6 focus:ring-2 focus:ring-gray-400 focus:border-transparent">
+                <option value="Новая">Новая</option>
+                <option value="Подтверждена">Подтверждена</option>
+                <option value="Завершена">Завершена</option>
+                <option value="Отменена">Отменена</option>
+            </select>
+            <div class="flex space-x-4">
+                <button onclick="saveStatus()" class="flex-1 accent-bg hover-accent text-white py-3 rounded-lg font-semibold transition">
+                    Сохранить
+                </button>
+                <button onclick="closeStatusModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-3 rounded-lg font-semibold transition">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentBookingId = null;
+        let allBookings = [];
+        let importedData = null;
+
+        // Загрузка мастеров в фильтр (только после авторизации)
+        function loadMastersFilter() {
+            const masters = JSON.parse(localStorage.getItem('masters') || '[]');
+            const select = document.getElementById('filterMaster');
+            
+            // Очищаем предыдущие опции
+            select.innerHTML = '<option value="">Все мастера</option>';
+            
+            masters.forEach(master => {
+                const option = document.createElement('option');
+                option.value = master.id;
+                option.textContent = master.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Импорт данных из файла
+        function importData() {
+            const fileInput = document.getElementById('importFile');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            showImportStatus('Загрузка файла...', 'bg-blue-50 text-blue-800');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (extension === 'csv') {
+                        parseCSV(content);
+                    } else if (extension === 'xlsx' || extension === 'xls') {
+                        showImportStatus('Ошибка: Поддерживается только формат CSV', 'bg-red-50 text-red-800');
+                        setTimeout(hideImportStatus, 3000);
+                    } else {
+                        showImportStatus('Ошибка: Неподдерживаемый формат файла', 'bg-red-50 text-red-800');
+                        setTimeout(hideImportStatus, 3000);
+                    }
+                } catch (error) {
+                    showImportStatus('Ошибка при чтении файла: ' + error.message, 'bg-red-50 text-red-800');
+                    setTimeout(hideImportStatus, 3000);
+                }
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        // Парсинг CSV файла
+        function parseCSV(content) {
+            try {
+                const lines = content.split('\n').filter(line => line.trim());
+                if (lines.length < 2) {
+                    throw new Error('Файл должен содержать заголовки и данные');
+                }
+                
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                const data = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const values = parseCSVLine(lines[i]);
+                    if (values.length === headers.length) {
+                        const row = {};
+                        headers.forEach((header, index) => {
+                            row[header] = values[index];
+                        });
+                        data.push(row);
+                    }
+                }
+                
+                if (data.length === 0) {
+                    throw new Error('Не найдено корректных данных для импорта');
+                }
+                
+                importedData = { headers, data };
+                showDataPreview();
+                hideImportStatus();
+                
+            } catch (error) {
+                showImportStatus('Ошибка парсинга CSV: ' + error.message, 'bg-red-50 text-red-800');
+                setTimeout(hideImportStatus, 3000);
+            }
+        }
+
+        // Парсинг строки CSV с учетом кавычек
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current.trim());
+            return result.map(item => item.replace(/"/g, ''));
+        }
+
+        // Показать предварительный просмотр данных
+        function showDataPreview() {
+            const preview = document.getElementById('dataPreview');
+            const headersContainer = document.getElementById('previewHeaders');
+            const dataContainer = document.getElementById('previewData');
+            
+            // Заголовки
+            let headersHTML = '<tr>';
+            importedData.headers.forEach(header => {
+                headersHTML += `<th class="text-left p-2 border-b font-semibold">${header}</th>`;
+            });
+            headersHTML += '</tr>';
+            headersContainer.innerHTML = headersHTML;
+            
+            // Данные (первые 5 строк)
+            let dataHTML = '';
+            const previewRows = importedData.data.slice(0, 5);
+            previewRows.forEach(row => {
+                dataHTML += '<tr>';
+                importedData.headers.forEach(header => {
+                    dataHTML += `<td class="p-2 border-b">${row[header] || ''}</td>`;
+                });
+                dataHTML += '</tr>';
+            });
+            
+            if (importedData.data.length > 5) {
+                dataHTML += `<tr><td colspan="${importedData.headers.length}" class="p-2 text-center text-gray-500 italic">... и еще ${importedData.data.length - 5} записей</td></tr>`;
+            }
+            
+            dataContainer.innerHTML = dataHTML;
+            preview.classList.remove('hidden');
+        }
+
+        // Подтвердить импорт
+        function confirmImport() {
+            try {
+                const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+                let importedCount = 0;
+                
+                importedData.data.forEach((row, index) => {
+                    // Маппинг полей CSV на структуру booking
+                    const booking = {
+                        id: Date.now() + index + Math.floor(Math.random() * 1000), // Уникальный ID для каждой записи
+                        serviceId: row['ID услуги'] || row['serviceId'] || 'unknown',
+                        serviceName: row['Услуга'] || row['serviceName'] || row['Название услуги'] || 'Неизвестная услуга',
+                        duration: parseInt(row['Длительность'] || row['duration'] || '60'),
+                        masterId: parseInt(row['ID мастера'] || row['masterId'] || '1'),
+                        masterName: row['Мастер'] || row['masterName'] || row['Имя мастера'] || 'Неизвестный мастер',
+                        date: row['Дата'] || row['date'] || new Date().toISOString().split('T')[0],
+                        time: row['Время'] || row['time'] || '10:00',
+                        clientName: row['Клиент'] || row['clientName'] || row['Имя клиента'] || 'Не указано',
+                        phone: row['Телефон'] || row['phone'] || row['Номер телефона'] || '',
+                        status: row['Статус'] || row['status'] || 'Новая',
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    // Проверка на дубликаты по телефону, дате и времени
+                    const isDuplicate = bookings.some(existing => 
+                        existing.phone === booking.phone && 
+                        existing.date === booking.date && 
+                        existing.time === booking.time
+                    );
+                    
+                    if (!isDuplicate) {
+                        bookings.push(booking);
+                        importedCount++;
+                    }
+                });
+                
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+                
+                showImportStatus(`Успешно импортировано ${importedCount} записей`, 'bg-green-50 text-green-800');
+                setTimeout(() => {
+                    hideImportStatus();
+                    cancelImport();
+                    loadBookings();
+                }, 2000);
+                
+            } catch (error) {
+                showImportStatus('Ошибка при импорте: ' + error.message, 'bg-red-50 text-red-800');
+                setTimeout(hideImportStatus, 3000);
+            }
+        }
+
+        // Отменить импорт
+        function cancelImport() {
+            document.getElementById('dataPreview').classList.add('hidden');
+            document.getElementById('importFile').value = '';
+            importedData = null;
+        }
+
+        // Показать статус импорта
+        function showImportStatus(message, className) {
+            const status = document.getElementById('importStatus');
+            const messageEl = document.getElementById('importMessage');
+            
+            status.className = `mb-6 p-4 rounded-lg ${className}`;
+            messageEl.textContent = message;
+            status.classList.remove('hidden');
+        }
+
+        // Скрыть статус импорта
+        function hideImportStatus() {
+            document.getElementById('importStatus').classList.add('hidden');
+        }
+
+        // Загрузка заявок
+        function loadBookings() {
+            allBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            
+            // Применение фильтров
+            const filterDate = document.getElementById('filterDate').value;
+            const filterMaster = document.getElementById('filterMaster').value;
+            const filterStatus = document.getElementById('filterStatus').value;
+            
+            let filtered = allBookings;
+            
+            if (filterDate) {
+                filtered = filtered.filter(b => b.date === filterDate);
+            }
+            if (filterMaster) {
+                filtered = filtered.filter(b => b.masterId == filterMaster);
+            }
+            if (filterStatus) {
+                filtered = filtered.filter(b => b.status === filterStatus);
+            }
+            
+            // Сортировка по дате и времени (новые сверху)
+            filtered.sort((a, b) => {
+                const dateA = new Date(a.date + ' ' + a.time);
+                const dateB = new Date(b.date + ' ' + b.time);
+                return dateB - dateA;
+            });
+            
+            displayBookings(filtered);
+            updateStatistics(allBookings);
+        }
+
+        // Отображение заявок
+        function displayBookings(bookings) {
+            const tbody = document.getElementById('bookingsTable');
+            
+            // Отладка: проверим данные
+            console.log('Отображаем заявки:', bookings);
+            bookings.forEach((booking, index) => {
+                console.log(`Заявка ${index}:`, booking);
+                console.log(`Имя клиента в заявке ${index}:`, booking.clientName);
+            });
+            
+            if (bookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">Нет заявок</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            bookings.forEach(booking => {
+                const statusClass = getStatusClass(booking.status);
+                const clientName = booking.clientName || 'Не указано';
+                console.log(`Отображаем имя клиента: "${clientName}" для заявки #${booking.id}`);
+                html += `<tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="px-4 py-4 text-sm">#${booking.id}</td>
+                    <td class="px-4 py-4 text-sm">${formatDate(booking.date)}</td>
+                    <td class="px-4 py-4 text-sm font-medium">${booking.time}</td>
+                    <td class="px-4 py-4 text-sm font-medium text-gray-900">${clientName}</td>
+                    <td class="px-4 py-4 text-sm">${booking.masterName}</td>
+                    <td class="px-4 py-4 text-sm">${booking.serviceName}</td>
+                    <td class="px-4 py-4 text-sm">${booking.phone}</td>
+                    <td class="px-4 py-4">
+                        <span class="${statusClass} text-white px-3 py-1 rounded-full text-xs font-medium">
+                            ${booking.status}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4">
+                        <button onclick="openStatusModal(${booking.id})" class="text-blue-600 hover:text-blue-800 text-sm font-medium mr-3">
+                            Изменить
+                        </button>
+                        <button onclick="deleteBooking(${booking.id})" class="text-red-600 hover:text-red-800 text-sm font-medium">
+                            Удалить
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            
+            tbody.innerHTML = html;
+        }
+
+        // Обновление статистики
+        function updateStatistics(bookings) {
+            const stats = {
+                'Новая': 0,
+                'Подтверждена': 0,
+                'Завершена': 0,
+                'Отменена': 0
+            };
+            
+            bookings.forEach(booking => {
+                if (stats.hasOwnProperty(booking.status)) {
+                    stats[booking.status]++;
+                }
+            });
+            
+            document.getElementById('statNew').textContent = stats['Новая'];
+            document.getElementById('statConfirmed').textContent = stats['Подтверждена'];
+            document.getElementById('statCompleted').textContent = stats['Завершена'];
+            document.getElementById('statCancelled').textContent = stats['Отменена'];
+        }
+
+        // Получение класса для статуса
+        function getStatusClass(status) {
+            const classes = {
+                'Новая': 'status-new',
+                'Подтверждена': 'status-confirmed',
+                'Завершена': 'status-completed',
+                'Отменена': 'status-cancelled'
+            };
+            return classes[status] || 'bg-gray-500';
+        }
+
+        // Форматирование даты
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        // Открытие модального окна статуса
+        function openStatusModal(bookingId) {
+            currentBookingId = bookingId;
+            const booking = allBookings.find(b => b.id === bookingId);
+            document.getElementById('newStatus').value = booking.status;
+            document.getElementById('statusModal').classList.remove('hidden');
+            document.getElementById('statusModal').classList.add('flex');
+        }
+
+        // Закрытие модального окна
+        function closeStatusModal() {
+            document.getElementById('statusModal').classList.add('hidden');
+            document.getElementById('statusModal').classList.remove('flex');
+            currentBookingId = null;
+        }
+
+        // Сохранение статуса
+        function saveStatus() {
+            const newStatus = document.getElementById('newStatus').value;
+            const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            const index = bookings.findIndex(b => b.id === currentBookingId);
+            
+            if (index !== -1) {
+                bookings[index].status = newStatus;
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+                loadBookings();
+                closeStatusModal();
+            }
+        }
+
+        // Удаление заявки
+        function deleteBooking(bookingId) {
+            if (!confirm('Вы уверены, что хотите удалить эту заявку?')) return;
+            
+            const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            const filtered = bookings.filter(b => b.id !== bookingId);
+            localStorage.setItem('bookings', JSON.stringify(filtered));
+            loadBookings();
+        }
+
+        // Сброс фильтров
+        function clearFilters() {
+            document.getElementById('filterDate').value = '';
+            document.getElementById('filterMaster').value = '';
+            document.getElementById('filterStatus').value = '';
+            loadBookings();
+        }
+
+        // Экспорт в CSV
+        function exportToCSV() {
+            const headers = ['ID', 'Дата', 'Время', 'Клиент', 'Мастер', 'Услуга', 'Длительность', 'Телефон', 'Статус', 'Создано'];
+            const rows = allBookings.map(b => [
+                b.id,
+                b.date,
+                b.time,
+                b.clientName || 'Не указано',
+                b.masterName,
+                b.serviceName,
+                b.duration,
+                b.phone,
+                b.status,
+                new Date(b.createdAt).toLocaleString('ru-RU')
+            ]);
+            
+            let csv = '\uFEFF' + headers.join(',') + '\n'; // BOM для корректного отображения кириллицы
+            rows.forEach(row => {
+                csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+            
+            const dataBlob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `bookings_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+    </div> <!-- End of crmContent -->
+
+    <script>
+        // Система авторизации
+        const CRM_PASSWORD = '00000'; // Пароль для CRM
+        
+        // Проверка авторизации при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('crmAuthorized') === 'true') {
+                showCRM();
+            }
+        });
+        
+        function checkPassword(event) {
+            event.preventDefault();
+            const password = document.getElementById('passwordInput').value;
+            
+            if (password === CRM_PASSWORD) {
+                sessionStorage.setItem('crmAuthorized', 'true');
+                showCRM();
+            } else {
+                document.getElementById('errorMessage').classList.remove('hidden');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
+        }
+        
+        function showCRM() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('crmContent').classList.remove('hidden');
+            // Инициализация CRM после авторизации
+            loadMastersFilter();
+            loadBookings();
+        }
+        
+        function logout() {
+            sessionStorage.removeItem('crmAuthorized');
+            document.getElementById('crmContent').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
